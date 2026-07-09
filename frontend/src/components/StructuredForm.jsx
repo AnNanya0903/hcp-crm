@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { submitInteraction, clearLastSubmission } from '../store/interactionsSlice';
+import { createHcp } from '../api/client';
 
 const PRODUCTS = ['CardioFlex', 'Nexivar', 'GlucoBalance', 'PulmoCare', 'OncoShield'];
 
 const emptyForm = {
   hcp_id: '',
+  new_hcp_name: '',
+  new_hcp_specialty: '',
+  new_hcp_hospital: '',
+  is_new_hcp: false,
   interaction_type: 'visit',
   products_discussed: [],
   topics: '',
@@ -34,16 +39,42 @@ export default function StructuredForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(
-      submitInteraction({
-        ...form,
-        topics: form.topics ? form.topics.split(',').map((t) => t.trim()) : [],
-        follow_up_date: form.follow_up_date || null,
-      })
-    );
-    setForm(emptyForm);
+    try {
+      let hcpId = form.hcp_id;
+      let hcpName = '';
+      if (form.is_new_hcp && form.new_hcp_name.trim()) {
+        const hcp = await createHcp({
+          name: form.new_hcp_name.trim(),
+          specialty: form.new_hcp_specialty.trim() || null,
+          hospital: form.new_hcp_hospital.trim() || null,
+        });
+        hcpId = hcp.id;
+        hcpName = hcp.name;
+      } else if (!hcpId && form.new_hcp_name.trim()) {
+        const hcp = await createHcp({
+          name: form.new_hcp_name.trim(),
+          specialty: form.new_hcp_specialty.trim() || null,
+          hospital: form.new_hcp_hospital.trim() || null,
+        });
+        hcpId = hcp.id;
+        hcpName = hcp.name;
+      }
+
+      dispatch(
+        submitInteraction({
+          ...form,
+          hcp_id: hcpId || undefined,
+          hcp_name: hcpName || undefined,
+          topics: form.topics ? form.topics.split(',').map((t) => t.trim()) : [],
+          follow_up_date: form.follow_up_date || null,
+        })
+      );
+      setForm(emptyForm);
+    } catch (err) {
+      console.error('Failed to submit interaction', err);
+    }
   };
 
   return (
@@ -52,12 +83,41 @@ export default function StructuredForm() {
         <div className="form-grid">
           <div className="field">
             <label>HCP</label>
-            <select value={form.hcp_id} onChange={(e) => handleChange('hcp_id', e.target.value)} required>
-              <option value="">Select HCP…</option>
-              {hcps.map((h) => (
-                <option key={h.id} value={h.id}>{h.name} — {h.specialty}</option>
-              ))}
-            </select>
+            <div className="checkbox-row" style={{ marginBottom: 8 }}>
+              <input
+                type="checkbox"
+                checked={form.is_new_hcp}
+                onChange={(e) => handleChange('is_new_hcp', e.target.checked)}
+              />
+              <span style={{ fontSize: 13 }}>Create new HCP</span>
+            </div>
+            {form.is_new_hcp ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input
+                  placeholder="HCP Name"
+                  value={form.new_hcp_name}
+                  onChange={(e) => handleChange('new_hcp_name', e.target.value)}
+                  required
+                />
+                <input
+                  placeholder="Specialty"
+                  value={form.new_hcp_specialty}
+                  onChange={(e) => handleChange('new_hcp_specialty', e.target.value)}
+                />
+                <input
+                  placeholder="Hospital"
+                  value={form.new_hcp_hospital}
+                  onChange={(e) => handleChange('new_hcp_hospital', e.target.value)}
+                />
+              </div>
+            ) : (
+              <select value={form.hcp_id} onChange={(e) => handleChange('hcp_id', e.target.value)} required>
+                <option value="">Select HCP…</option>
+                {hcps.map((h) => (
+                  <option key={h.id} value={h.id}>{h.name} — {h.specialty}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="field">

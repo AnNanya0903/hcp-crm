@@ -3,9 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.config import settings
-from app.routers import interactions, chat
-
-Base.metadata.create_all(bind=engine)
+from app.routers import interactions, chat, hcps
 
 app = FastAPI(title="AI-First CRM — HCP Module API")
 
@@ -19,6 +17,7 @@ app.add_middleware(
 
 app.include_router(interactions.router)
 app.include_router(chat.router)
+app.include_router(hcps.router)
 
 
 @app.get("/health")

@@ -6,6 +6,8 @@ const client = axios.create({
 
 export const fetchHcps = () => client.get('/interactions/hcps').then((r) => r.data);
 
+export const createHcp = (payload) => client.post('/hcps', payload).then((r) => r.data);
+
 export const fetchInteractions = (hcpId) =>
   client.get('/interactions', { params: hcpId ? { hcp_id: hcpId } : {} }).then((r) => r.data);
 

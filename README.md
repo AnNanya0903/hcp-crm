@@ -47,13 +47,20 @@ conversational reply plus a JSON `preview` the frontend renders as a card.
 
 ## Running it locally
 
-### 1. Database
 
-Create a Postgres database:
 
-```bash
-createdb hcp_crm
-```
+# 1. Start Postgres (Docker)
+docker start hcp-crm-pg
+
+# 2. Backend
+cd hcp-crm\backend
+.\venv\Scripts\Activate.ps1
+python seed.py
+uvicorn app.main:app --reload --port 8000
+
+# 3. Frontend (new terminal)
+cd hcp-crm\frontend
+npm start
 
 ### 2. Backend
 

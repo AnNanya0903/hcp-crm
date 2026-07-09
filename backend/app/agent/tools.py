@@ -27,11 +27,12 @@ def _resolve_hcp(db: Session, name: str | None, hcp_id: str | None) -> models.HC
     if hcp_id:
         return db.query(models.HCP).filter(models.HCP.id == hcp_id).first()
     if name:
-        return (
-            db.query(models.HCP)
-            .filter(models.HCP.name.ilike(f"%{name}%"))
-            .first()
-        )
+        q = db.query(models.HCP)
+        row = q.filter(models.HCP.name.ilike(f"%{name}%")).first()
+        if row:
+            return row
+        last = name.split()[-1]
+        return q.filter(models.HCP.name.ilike(f"%{last}%")).first()
     return None
 
 
