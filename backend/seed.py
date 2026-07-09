@@ -36,6 +36,18 @@ def add_interaction(hcp_name, interaction_type, products, topics, sentiment, sam
     hcp = hcps.get(hcp_name)
     if not hcp:
         return
+    exists = (
+        db.query(models.Interaction)
+        .filter(
+            models.Interaction.hcp_id == hcp.id,
+            models.Interaction.interaction_type == interaction_type,
+            models.Interaction.summary == summary,
+            models.Interaction.source == source,
+        )
+        .first()
+    )
+    if exists:
+        return
     row = models.Interaction(
         hcp_id=hcp.id,
         interaction_type=interaction_type,
