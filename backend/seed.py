@@ -1,5 +1,5 @@
 """Run once to populate demo HCPs and interactions: `python seed.py`"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.database import SessionLocal, Base, engine
 from app import models
@@ -29,7 +29,7 @@ for h in demo_hcps:
 
 db.commit()
 
-now = datetime.utcnow()
+now = datetime.now(timezone.utc)
 
 
 def add_interaction(hcp_name, interaction_type, products, topics, sentiment, samples, sample_qty, follow_up_days, summary, source="form"):
